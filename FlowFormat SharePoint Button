@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/sp/v2/column-formatting.schema.json",
+  "elmType": "button",
+  "txtContent": "Start flow",
+  "customRowAction": {
+    "action": "executeFlow",
+    "actionParams": "{\"id\": \"v1/e3afbcdd-65d4-e78e-93e7-aa2d46058557/01ff978c-3fa9-42cc-a332-dd9b42bcaf6d\"}"
+  },
+  "style": {
+    "background-color": "#4089A1",
+    "color": "white",
+    "cursor": "pointer",
+    "visibility": {
+      "operator": "?",
+      "operands": [
+        {
+          "operator": "||",
+          "operands": [
+            {
+              "operator": "==",
+              "operands": [
+                "[$CopyToTrackerFlowStatus]",
+                "Success"
+              ]
+            },
+            {
+              "operator": "==",
+              "operands": [
+                "[$CopyToTrackerFlowStatus]",
+                "Duplicate"
+              ]
+            }
+          ]
+        },
+        "visible",
+        "hidden"
+      ]
+    }
+  }
+}
