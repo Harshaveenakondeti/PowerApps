@@ -1,0 +1,98 @@
+If(varHomevisibleOp,  
+
+If(varSortColumnu ="EngagementLevel",Sort(Filter(
+    colTotal,
+    'Project Name' in cmbProjNameFltr.SelectedItems || IsBlank(cmbProjNameFltr.SelectedItems) || IsEmpty(cmbProjNameFltr.SelectedItems),
+   'Client Name' in cmbClientFltr.SelectedItems || IsBlank(cmbClientFltr.SelectedItems) || IsEmpty(cmbClientFltr.SelectedItems),
+   EngagementLevel in cmbFlterEng.SelectedItems || IsBlank(cmbFlterEng.SelectedItems) || IsEmpty(cmbFlterEng.SelectedItems),
+   IsBlank(cmbResourcs.SelectedItems) || IsEmpty(cmbResourcs.SelectedItems) 
+   || CountRows(Filter( Split(Resource,","),Trim(Value) in   cmbResourcs.SelectedItems))>0 
+  // ||    CountRows(If(Filter( Split(Resource,","),Trim(Value)=Blank())    in  cmbResourcs.SelectedItems))>0
+   ,Text('Due Date',"mmmm") in cmbFiltrMonth.SelectedItems || IsBlank(cmbFiltrMonth.SelectedItems) || IsEmpty(cmbFiltrMonth.SelectedItems),
+    Year('Due Date') in cmbFiltrYear.SelectedItems || IsBlank(cmbFiltrYear.SelectedItems) || IsEmpty(cmbFiltrYear.SelectedItems)
+,PriorityNew.Value in cmbFltrPririty.SelectedItems || IsBlank(cmbFltrPririty.SelectedItems) || IsEmpty(cmbFltrPririty.SelectedItems)
+,Progress.Value in cmbFiltrProgress.SelectedItems || IsBlank(cmbFiltrProgress.SelectedItems) || IsEmpty(cmbFiltrProgress.SelectedItems)
+,ModifiedNew>=dtpckStartDteMod.SelectedDate || IsBlank(dtpckStartDteMod.SelectedDate) 
+
+, ModifiedNew<=dtpckrEndDtMod.SelectedDate || IsBlank(dtpckrEndDtMod.SelectedDate) , Status_Project in cmbFiltrSts.SelectedItems || IsBlank(cmbFiltrSts.SelectedItems) || IsEmpty(cmbFiltrSts.SelectedItems)
+)
+
+
+
+
+
+,EngagementLevel.Value,varSortDirectionu),
+
+
+If(varSortColumnu = "Progress",Sort(Filter(
+    colTotal,
+    'Project Name' in cmbProjNameFltr.SelectedItems || IsBlank(cmbProjNameFltr.SelectedItems) || IsEmpty(cmbProjNameFltr.SelectedItems),
+   'Client Name' in cmbClientFltr.SelectedItems || IsBlank(cmbClientFltr.SelectedItems) || IsEmpty(cmbClientFltr.SelectedItems),
+   EngagementLevel in cmbFlterEng.SelectedItems || IsBlank(cmbFlterEng.SelectedItems) || IsEmpty(cmbFlterEng.SelectedItems),
+   IsBlank(cmbResourcs.SelectedItems) || IsEmpty(cmbResourcs.SelectedItems) 
+   || CountRows(Filter( Split(Resource,","),Trim(Value) in   cmbResourcs.SelectedItems))>0 
+  // ||    CountRows(If(Filter( Split(Resource,","),Trim(Value)=Blank())    in  cmbResourcs.SelectedItems))>0
+   ,Text('Due Date',"mmmm") in cmbFiltrMonth.SelectedItems || IsBlank(cmbFiltrMonth.SelectedItems) || IsEmpty(cmbFiltrMonth.SelectedItems),
+    Year('Due Date') in cmbFiltrYear.SelectedItems || IsBlank(cmbFiltrYear.SelectedItems) || IsEmpty(cmbFiltrYear.SelectedItems)
+,PriorityNew.Value in cmbFltrPririty.SelectedItems || IsBlank(cmbFltrPririty.SelectedItems) || IsEmpty(cmbFltrPririty.SelectedItems)
+,Progress.Value in cmbFiltrProgress.SelectedItems || IsBlank(cmbFiltrProgress.SelectedItems) || IsEmpty(cmbFiltrProgress.SelectedItems)
+,ModifiedNew>=dtpckStartDteMod.SelectedDate || IsBlank(dtpckStartDteMod.SelectedDate) 
+
+, ModifiedNew<=dtpckrEndDtMod.SelectedDate || IsBlank(dtpckrEndDtMod.SelectedDate) , Status_Project in cmbFiltrSts.SelectedItems || IsBlank(cmbFiltrSts.SelectedItems) || IsEmpty(cmbFiltrSts.SelectedItems)
+), 
+
+
+
+Progress.Value,varSortDirectionu),
+
+If(!IsBlank(varSortColumnu),
+
+SortByColumns(Filter(
+    colTotal,
+    'Project Name' in cmbProjNameFltr.SelectedItems || IsBlank(cmbProjNameFltr.SelectedItems) || IsEmpty(cmbProjNameFltr.SelectedItems),
+   'Client Name' in cmbClientFltr.SelectedItems || IsBlank(cmbClientFltr.SelectedItems) || IsEmpty(cmbClientFltr.SelectedItems),
+   EngagementLevel in cmbFlterEng.SelectedItems || IsBlank(cmbFlterEng.SelectedItems) || IsEmpty(cmbFlterEng.SelectedItems),
+   IsBlank(cmbResourcs.SelectedItems) || IsEmpty(cmbResourcs.SelectedItems) 
+   || CountRows(Filter( Split(Resource,","),Trim(Value) in   cmbResourcs.SelectedItems))>0 
+  // ||    CountRows(If(Filter( Split(Resource,","),Trim(Value)=Blank())    in  cmbResourcs.SelectedItems))>0
+   ,Text('Due Date',"mmmm") in cmbFiltrMonth.SelectedItems || IsBlank(cmbFiltrMonth.SelectedItems) || IsEmpty(cmbFiltrMonth.SelectedItems),
+    Year('Due Date') in cmbFiltrYear.SelectedItems || IsBlank(cmbFiltrYear.SelectedItems) || IsEmpty(cmbFiltrYear.SelectedItems)
+,PriorityNew.Value in cmbFltrPririty.SelectedItems || IsBlank(cmbFltrPririty.SelectedItems) || IsEmpty(cmbFltrPririty.SelectedItems)
+,Progress.Value in cmbFiltrProgress.SelectedItems || IsBlank(cmbFiltrProgress.SelectedItems) || IsEmpty(cmbFiltrProgress.SelectedItems)
+,ModifiedNew>=dtpckStartDteMod.SelectedDate || IsBlank(dtpckStartDteMod.SelectedDate) 
+
+, ModifiedNew<=dtpckrEndDtMod.SelectedDate || IsBlank(dtpckrEndDtMod.SelectedDate) , Status_Project in cmbFiltrSts.SelectedItems || IsBlank(cmbFiltrSts.SelectedItems) || IsEmpty(cmbFiltrSts.SelectedItems)
+),
+
+varSortColumnu,varSortDirectionu)
+, // for empty sort selection
+SortByColumns(Filter(
+    colTotal,
+    'Project Name' in cmbProjNameFltr.SelectedItems || IsBlank(cmbProjNameFltr.SelectedItems) || IsEmpty(cmbProjNameFltr.SelectedItems),
+   'Client Name' in cmbClientFltr.SelectedItems || IsBlank(cmbClientFltr.SelectedItems) || IsEmpty(cmbClientFltr.SelectedItems),
+   EngagementLevel in cmbFlterEng.SelectedItems || IsBlank(cmbFlterEng.SelectedItems) || IsEmpty(cmbFlterEng.SelectedItems),
+   IsBlank(cmbResourcs.SelectedItems) || IsEmpty(cmbResourcs.SelectedItems) 
+   || CountRows(Filter( Split(Resource,","),Trim(Value) in   cmbResourcs.SelectedItems))>0 
+  // ||    CountRows(If(Filter( Split(Resource,","),Trim(Value)=Blank())    in  cmbResourcs.SelectedItems))>0
+   ,Text('Due Date',"mmmm") in cmbFiltrMonth.SelectedItems || IsBlank(cmbFiltrMonth.SelectedItems) || IsEmpty(cmbFiltrMonth.SelectedItems),
+    Year('Due Date') in cmbFiltrYear.SelectedItems || IsBlank(cmbFiltrYear.SelectedItems) || IsEmpty(cmbFiltrYear.SelectedItems)
+,PriorityNew.Value in cmbFltrPririty.SelectedItems || IsBlank(cmbFltrPririty.SelectedItems) || IsEmpty(cmbFltrPririty.SelectedItems)
+,Progress.Value in cmbFiltrProgress.SelectedItems || IsBlank(cmbFiltrProgress.SelectedItems) || IsEmpty(cmbFiltrProgress.SelectedItems)
+
+,ModifiedNew>=dtpckStartDteMod.SelectedDate
+ || IsBlank(dtpckStartDteMod.SelectedDate) 
+
+, ModifiedNew<=dtpckrEndDtMod.SelectedDate 
+|| IsBlank(dtpckrEndDtMod.SelectedDate) ,
+ Status_Project in cmbFiltrSts.SelectedItems || IsBlank(cmbFiltrSts.SelectedItems) || IsEmpty(cmbFiltrSts.SelectedItems)
+),
+"Project Name",SortOrder.Ascending)
+)
+
+
+)))
+
+
+
+
+ 
