@@ -1,0 +1,524 @@
+ClearCollect(colStyle,
+    {
+        FontType:Font.Arial, HeadingFontSize:14, ValueFontSize:12, SpecialFontColor:Color.White,
+        ErrorColor:RGBA(168,0,0,1), baseColor:RGBA(47,182,188,1), SecondColor:RGBA(28,110,114,1), MandateColor:RGBA(233,90,26,1),
+        SecondHomeBtnColor:RGBA(28,110,114,0.2), SecondhoverColor:RGBA(28,110,114,0.5),  
+        headerColor:RGBA(47,182,188,1), level1BtnWidth:150,level2BtnWidth:400,level2BtnHeight:40,level1BtnHeight:40,
+        ButtonColor:RGBA(47,182,188,1), HomeButtonHoverColor:RGBA(47,182,188,0.5), HomeButtonFillColor:RGBA(33,107,153,1),
+        LaunchLiveLink:First(ConfigListNASA).DashboardLink,//Production App Link
+         TemplateLink:First(ConfigListNASA).EmbededUrl,NASAUrl:First(ConfigListNASA).NASAEmbededLink
+    });
+    
+    ClearCollect(colResource,ResourceList);
+    
+    /*
+    If(!IsBlank(Value(Param("ID_Val"))),
+        Set(varAppEmail, true );Set(varHomevisibleOp, true );Set(varHomevisible, false );Set(varVissible,1);
+        //varOpp & varInnov are flase as Nasa & Central forms are in Edit mode
+        Set(varOpp, false );Set(varOpportunityEdit, true );Set(varOpportunityNew, false );
+        //Set(varInnov, false );Set(varInnovationNew, false );Set(varInnovationEdit, false );
+        ClearCollect(colOpportunity,NASADigitalOppurtunityTracker);
+        ClearCollect(colEditOppor,Filter(NASADigitalOppurtunityTracker,ID=Value(Param("ID_Val"))));
+        EditForm(frmOpportnty);
+        ,
+        Set(varAppEmail, false );Set(varHomevisibleOp, false );Set(varHomevisible, false );Set(varVissible,0);
+        //varOpp & varInnov are true as Nasa & Central forms are in New mode
+        Set(varOpp, true );Set(varOpportunityEdit, false );Set(varOpportunityNew, true );
+        //Set(varInnov, true );
+    );
+    */
+
+    If(!IsBlank(Value(Param("ID_Val"))),
+        Set(varAppEmail, true );Set(varHomevisibleOp, true );
+        Set(varOpp, false );Set(varOpportunityNew, false );Set(varOpportunityEdit, true );
+        Set(varVissible,1);
+        //Set(varHomevisible, false );
+        ClearCollect(colOpportunity,NASADigitalOppurtunityTracker);
+        ClearCollect(colEditOppor,Filter(NASADigitalOppurtunityTracker,ID=Value(Param("ID_Val"))));
+        EditForm(frmOpportnty);
+        ,
+        Set(varAppEmail, false );Set(varHomevisibleOp, false );
+        Set(varOpp, true );Set(varOpportunityNew, true );Set(varOpportunityEdit, false );
+        Set(varVissible,0);
+        //Set(varHomevisible, false );
+    );
+        
+    Set(varCurrentUser,User());
+    If((varCurrentUser.Email in First(ConfigListNASA).AdminTeam.Email),
+        Set(varIsAppAdmin, true ),
+        Set(varIsAppAdmin, false )
+    );
+     Set(varModifiedUser,
+   First(ConfigListNASA).ModifiedDatePerson.Email);
+     Set(varModifiedUserDate,
+   First(ConfigListNASA).ModifiedDate);  
+        
+    Set(varNoReset, false );
+
+    ClearCollect(colModifiedDate,LatestVersion);
+
+
+
+StartScreen;
+If(
+    First(ConfigListNASA).AppStatus.Value = "Maintanence" And !(User().Email in First(ConfigListNASA).AdminTeam.Email),
+    'Maintenence Screen',
+    If(!IsBlank(Param("screenname")),ProjectScreen,Home)
+)
+
+
+Homescreen :- 
+OVisible
+Clear(colEditOppor);
+Set(varAppEmail,false);
+Set(varVissible,1);
+Set(varHomevisibleOp,true);
+
+Live Link: Launch(First(colStyle).LaunchLiveLink)
+
+btnCollection
+//NASA Opportunity Collection
+Set(glofirstrecord,First(NASADigitalOppurtunityTracker));
+Set(glolastrecord,First(Sort(NASADigitalOppurtunityTracker,ID,SortOrder.Descending)));
+Set(glomaxiter,RoundUp((glolastrecord.ID - glofirstrecord.ID + 1) / 2000,0));
+
+ClearCollect(colIterations,Sequence(glomaxiter,0));
+Clear(colOpportunity);
+ForAll(
+    colIterations,
+    With(
+        {
+            gloprevThreshold: glofirstrecord.ID + Value(Value) * 2000,
+            glonextThreshold: glofirstrecord.ID + (Value(Value) + 1) * 2000
+        },
+        If(
+            glolastrecord.ID > Value,
+            Collect(
+                colOpportunity,
+                Filter(
+                   NASADigitalOppurtunityTracker,
+                  
+                    ID_Val >= gloprevThreshold && ID_Val < glonextThreshold
+                )
+            )
+        )
+    )
+);
+ ClearCollect(colModifiedDate,LatestVersion);
+ClearCollect(colOpportunity2,   AddColumns(colOpportunity,Region,"NASA",ProjectType,"Opportunity",'As',If(IsBlank(Concat('Assigned to',DisplayName,",")),"NA",
+Concat('Assigned to',DisplayName,","))));
+ClearCollect(colOpportunity21,AddColumns(colOpportunity2,ModifiedNew,If(DateDiff(Modified,varModifiedUserDate,TimeUnit.Days)<0 ,Modified, If(Lower('Modified By'.Email) <> Lower(varModifiedUser),Modified,LookUp(colModifiedDate,ID_Val=Value(ID),ModifiedAt))), M1,'Modified By'.Email));//If modified on 13th Aug & it will check in Excel, If it is not moidfied by User, it will show Modified.
+ClearCollect(colOpportunity3, Filter(colOpportunity21,Progress.Value<>"Completed"));
+ClearCollect(colOpportunity1,RenameColumns(colOpportunity3,Title,'Project Name',ID,ID1,'Due date','Due Date',Notes,Comment,'Start date','Start Date1',ProjectType,'Project Type','MM Contract Value ',Value,Region,Region1,'As',Resource));
+ClearCollect(colTotal,colOpportunity1);
+Set(varstartDate,Min(colModifiedDate,ModifiedAt));Set(varEndDate,Today()); Set(varReset,false);
+Set(varNoReset,false);Set(varStrtSlider,0);Set(varEndSlider,DateDiff(Min(colModifiedDate,ModifiedAt),Today()));
+//Set(varstartDate,Min(colModifiedDate,ModifiedAt));Set(varEndDate,Today()); Set(varReset,false);
+//Set(varNoReset,false);Set(varStrtSlider,0);Set(varEndSlider,DateDiff(Min(colOpportunity,Modified),Today()));
+
+    If(varHomevisibleOp,
+        ClearCollect(colTotal,Filter(colTotal,'Project Type'="Opportunity"))
+    )
+
+
+
+Project Screen:
+Ovisible
+UpdateContext(
+    {
+        varHighlightProjName: false,
+        varHighlightInitDesc: false,
+        varHighlightRegio: false,
+        varHighlightInvReq: false,
+        varHighlightActnDuedt: false,
+        varHighlightOppDueDt: false,
+        varHighlightMMClient: false,
+        varHighlightProjNameOppor: false,
+        varHighlightPlatinum: false,
+        varHighlightAssignTo: false,
+        varHighlightMMcontct: false,
+        varHighlightActnOwnr: false,
+        varHighlightAddDt: false,
+        varHighlightInnSTrtDt: false, varWait:false
+    }
+);
+
+If(
+    varOpportunityEdit,
+    If(
+        varAppEmail,
+        ClearCollect(
+            colEditOppor,
+            Filter(
+                NASADigitalOppurtunityTracker,
+                ID = Value(Param("ID_Val"))
+            )
+        )
+        
+
+    ),
+    If(
+        varOpportunityNew,
+        Clear(colEditOppor)
+    )
+);
+
+
+Save:
+
+If(varAppEmail,Set(varHomevisibleOp,true);,Set(varNoReset,true););
+
+If(
+    !IsBlank(DataCardValueProjectName.Text) && !IsBlank( DataCardValueClient.Text) && !IsBlank(DataCardValueAssgnTo.SelectedItems) && !IsEmpty(DataCardValueAssgnTo.SelectedItems)  && !IsBlank(DataCardValueMMContact.SelectedItems) && !IsEmpty(DataCardValueMMContact.SelectedItems) &&  !IsBlank(DataCardValueDueDate.SelectedDate) &&  !IsBlank(DataCardValueADdedDate.SelectedDate) && !IsBlank(DataCardValuePlatinum.SelectedItems) && !IsEmpty(DataCardValuePlatinum.SelectedItems)
+    ,
+    UpdateContext({varAssignedTo: DataCardValueAssgnTo.SelectedItems});
+    UpdateContext({varMMCoontact: DataCardValueMMContact.SelectedItems});
+    UpdateContext({varURLLink  :    DataCardValueCRMLink.Text}  ); //For flow
+    UpdateContext({varURLText :txtinpCRM.Text }); // For flow
+    UpdateContext({varWait: true});
+    // wait loader
+    //If in Edit Mode 
+    If( varOpportunityEdit,
+        
+        Select(btnRefreshResMaster);Select(btnAsncheck);
+        IfError(
+        Patch(
+            NASADigitalOppurtunityTracker,
+            LookUp(NASADigitalOppurtunityTracker,ID = First(colEditOppor).ID),
+            {
+                Title: DataCardValueProjectName.Text,
+                'Client Name': DataCardValueClient.Text,
+                //'CRM Entry':  DataCardValueCRMLink.Text,CRMEntryProject:
+                'Follow Up': DataCardValueFollwUp.Value,
+                'Opportunity Stage': DataCardValueOpprtStg.SelectedItems,
+                'MM Client Type': DataCardValueClientType.SelectedItems,
+                Progress: DataCardValueProgress.Selected,
+                PriorityNew:DataCardValuePrtyNew.Selected,
+               // Priority: DataCardValuePriority.Selected,
+                'Due date': DataCardValueDueDate.SelectedDate,
+                'Start date': DataCardValueStrtDate.SelectedDate,              
+                'Assigned to': DataCardValueAssgnTo.SelectedItems,
+                'MM Contact ': DataCardValueMMContact.SelectedItems,
+                'MM Contract Value ': Value(DataCardValueMMContractVlv.Text),
+                MRR: Value(DataCardValueMRR.Text),
+                'DTL Budget': Value(DataCardValueDTLBudget.Text),
+                Deliverables: DataCardValueDeliverabls.SelectedItems,
+                Pillars: DataCardValuePillars.SelectedItems,
+                Notes: DataCardValueNotes.Text,Status_Project:DataCardValueStatusproj.Selected,
+                'Tracker added date': DataCardValueADdedDate.SelectedDate,
+                EngagementLevel:DataCardValueEngagement.Selected,
+                'Strategic / Platinum?':DataCardValuePlatinum.Selected,
+                Top20StrategicPursuit:DataCardValueTop20.Value
+                ,OnDeansList:DataCardValueDeansList.Value,ServiceNowRequestNumber:DataCardValueSrvcNwNum.Text
+               , ToDoTask:DataCardValue1.Value
+            }
+        );
+        ,
+        Notify("There was error while submitting data",NotificationType.Error,3000);
+        ,
+        Notify("Data Updated Successfully",NotificationType.Success,3000); 
+        If(!IsBlank(varURLText) && !IsBlank( varURLLink) , 
+        IfError(
+        Digital_Tracker_CRMEntry_RestAPI.Run(First(colEditOppor).ID,varURLText,varURLLink),Notify("CRM Data not saved. There was an error",NotificationType.Error),Notify("CRM Data saved.",NotificationType.Success)));
+        
+         UpdateContext({varWait: false});
+        Navigate(Gallery);
+        ); 
+
+        ,
+        //New form
+        If(
+            varOpportunityNew,
+            Select(btnRefreshResMaster);
+                IfError(
+            Set(
+                varOppRecord,
+            
+                Patch(
+                    NASADigitalOppurtunityTracker,
+                    Defaults(NASADigitalOppurtunityTracker),
+                    {
+                        Title: DataCardValueProjectName.Text,
+                        'Client Name': DataCardValueClient.Text,
+                       // 'CRM Entry': DataCardValueCRMLink.Text,
+                        'Follow Up': DataCardValueFollwUp.Value,
+                        'Opportunity Stage': DataCardValueOpprtStg.SelectedItems,
+                        'MM Client Type': DataCardValueClientType.SelectedItems,
+                        Progress: DataCardValueProgress.Selected,
+                        PriorityNew:DataCardValuePrtyNew.Selected,
+                       // Priority: DataCardValuePriority.Selected,
+                        'Due date': DataCardValueDueDate.SelectedDate,
+                        'Start date': DataCardValueStrtDate.SelectedDate,
+                        'Assigned to': DataCardValueAssgnTo.SelectedItems,
+                        'MM Contact ': DataCardValueMMContact.SelectedItems,
+                        'MM Contract Value ': Value(DataCardValueMMContractVlv.Text),
+                        MRR: Value(DataCardValueMRR.Text),
+                        'DTL Budget': Value(DataCardValueDTLBudget.Text),Status_Project:DataCardValueStatusproj.Selected,
+                        Deliverables: DataCardValueDeliverabls.SelectedItems,
+                        Pillars: DataCardValuePillars.SelectedItems,
+                        Notes: DataCardValueNotes.Text,
+                        'Tracker added date': DataCardValueADdedDate.SelectedDate,EngagementLevel:DataCardValueEngagement.Selected,'Strategic / Platinum?':DataCardValuePlatinum.Selected,Top20StrategicPursuit:DataCardValueTop20.Value
+                     ,OnDeansList:DataCardValueDeansList.Value,ServiceNowRequestNumber:DataCardValueSrvcNwNum.Text,  ToDoTask:DataCardValue1.Value
+                     }
+                ));
+                Patch( NASADigitalOppurtunityTracker,LookUp(NASADigitalOppurtunityTracker,ID = varOppRecord.ID),{ID_Val: varOppRecord.ID});   
+            ,Notify( "There was error while submitting data",NotificationType.Error, 3000);
+            ,Notify( "Data saved Successfully", NotificationType.Success, 3000); 
+            
+             If(!IsBlank(varURLText) && !IsBlank( varURLLink) , 
+        IfError(
+        Digital_Tracker_CRMEntry_RestAPI.Run(varOppRecord.ID,varURLText,varURLLink),Notify("CRM Data not saved. There was an error",NotificationType.Error),Notify("CRM Data saved.",NotificationType.Success)));
+            
+            
+            
+            UpdateContext({varWait: false});
+            Navigate(Gallery);
+            )
+            );
+        );
+
+    ,
+    If(IsBlank(DataCardValueProjectName.Text),UpdateContext({varHighlightProjNameOppor: true}));
+    If(IsBlank(DataCardValueDueDate.SelectedDate) ,UpdateContext({varHighlightOppDueDt: true}));
+    If(IsBlank(DataCardValueADdedDate.SelectedDate) ,UpdateContext({varHighlightAddDt: true}));
+    If(IsEmpty(DataCardValueAssgnTo.SelectedItems) Or IsBlank(DataCardValueAssgnTo.SelectedItems),UpdateContext({varHighlightAssignTo: true}));
+    If(IsEmpty(DataCardValueMMContact.SelectedItems) Or IsBlank(DataCardValueMMContact.SelectedItems),UpdateContext({varHighlightMMcontct: true}));
+    If(IsBlank(DataCardValueClient.Text),UpdateContext({varHighlightMMClient: true}));
+    If(IsEmpty(DataCardValuePlatinum.SelectedItems) Or IsBlank(DataCardValuePlatinum.SelectedItems),UpdateContext({varHighlightPlatinum: true}));
+    Notify("Please fill Mandatery fields",NotificationType.Error,3000);
+);
+
+Clear(colAsnA);Clear(colAsnM);
+If(varAppEmail,
+Set(varHomevisibleOp,true);
+//Set(varHomevisible,false)
+,
+Set(varNoReset,true)
+);
+Select(btnCollection_frm);
+If(varAppEmail,
+ Set(varstartDate,Min(colOpportunity,Modified));Set(varEndDate,Today()); Set(varReset,false);
+Set(varNoReset,false);Set(varStrtSlider,0);Set(varEndSlider,DateDiff(Min(colOpportunity,Modified),Today()));
+, Set(varNoReset,true));
+UpdateContext({varWait: false});
+Set(varSortColumnu,"Project Name");Set(varSortDirectionu,"Ascending");
+
+
+
+Btn collection:
+//collect more than 2k records
+Set(
+    glofirstrecord,
+    First(NASADigitalOppurtunityTracker)
+);
+Set(
+    glolastrecord,
+    First(
+        Sort(
+          NASADigitalOppurtunityTracker,
+          ID,
+            SortOrder.Descending
+        )
+    )
+);
+Set(
+    glomaxiter,
+    RoundUp(
+        (glolastrecord.ID - glofirstrecord.ID + 1) / 2000,
+        0
+    )
+);
+ClearCollect(
+    colIterations,
+    Sequence(
+        glomaxiter,
+        0
+    )
+);
+Clear( colOpportunity);
+ForAll(
+    colIterations,
+    With(
+        {
+            gloprevThreshold: glofirstrecord.ID + Value(Value) * 2000,
+            glonextThreshold: glofirstrecord.ID + (Value(Value) + 1) * 2000
+        },
+        If(
+            glolastrecord.ID > Value,
+            Collect(
+                colOpportunity,
+                Filter(
+                   NASADigitalOppurtunityTracker,
+                  
+                    ID_Val >= gloprevThreshold && ID_Val < glonextThreshold
+                )
+            )
+        )
+    )
+);
+
+ClearCollect(colOpportunity2,   AddColumns(colOpportunity,Region,"NASA",ProjectType,"Opportunity",'As',If(IsBlank(Concat('Assigned to',DisplayName,",")),"NA",
+    Concat('Assigned to',DisplayName,","))));
+      ClearCollect(colOpportunity21,AddColumns(colOpportunity2,ModifiedNew,If(DateDiff(Modified,varModifiedUserDate,TimeUnit.Days)<0 ,Modified, If(Lower('Modified By'.Email) <> Lower(varModifiedUser),Modified,LookUp(colModifiedDate,ID_Val=Value(ID),ModifiedAt))), M1,'Modified By'.Email));
+      //If modified on 13th Aug & it will check in Excel, If it is not moidfied by User, it will show Modified.
+    ClearCollect(colOpportunity3, Filter(colOpportunity21,Progress.Value<>"Completed"));
+    //ClearCollect(colOpportunity4,AddColumns(colOpportunity3,ModifiedNew,If(DateDiff(Modified,13/08/2024,TimeUnit.Days)>0,Modified,LookUp(colModifiedDate,ID_Val=Value(ID),ModifiedAt))));
+//ClearCollect(colInnovation2,AddColumns(colInnovation,RegionValue,Region.Value,ActionOwnerNA,If(IsBlank(ActionOwnerOld),"NA",ActionOwnerOld)));
+ClearCollect(colOpportunity1,RenameColumns(colOpportunity3,Title,'Project Name',ID,ID1,'Due date','Due Date',Notes,Comment,'Start date','Start Date1',ProjectType,'Project Type','MM Contract Value ',Value,Region,Region1,'As',Resource));
+
+//ClearCollect(colInnovation1,RenameColumns(colInnovation2,'Initiative Title','Project Name',ID,ID1,'Next Steps',Comment,Actionduedate,'Due Date',ProjectType,'Project Type','Investment Request Value',Value,StartDate,'Start Date1',RegionValue,Region1,ActionOwnerNA,Resource));
+
+ClearCollect(colTotal,colOpportunity1
+//,colInnovation1
+);
+
+//Set(varstartDate,Min(colOpportunity,Modified));Set(varEndDate,Today()); Set(varReset,false);
+//Set(varNoReset,false);Set(varStrtSlider,0);Set(varEndSlider,DateDiff(Min(colOpportunity,Modified),Today()));
+//If(varHomevisible,ClearCollect(colTotal,Filter(colTotal,'Project Type'="Innovation")),
+If(varHomevisibleOp,
+ClearCollect(colTotal,Filter(colTotal,'Project Type'="Opportunity")));
+//)
+ Go Back Button:
+If(varAppEmail,Set(varHomevisibleOp,true);
+//Set(varHomevisible,false)
+,Set(varNoReset,true));
+Select(btnCollection_frm);
+
+If(varAppEmail,
+ Set(varstartDate,Min(colModifiedDate,ModifiedAt));Set(varEndDate,Today()); Set(varNoReset,false);
+Set(varStrtSlider,0);Set(varEndSlider,DateDiff(Min(colModifiedDate,ModifiedAt),Today()));
+,Set(varNoReset,true));
+/*If(varAppEmail,
+ Set(varstartDate,Min(colOpportunity,Modified));Set(varEndDate,Today()); Set(varNoReset,false);
+Set(varStrtSlider,0);Set(varEndSlider,DateDiff(Min(colOpportunity,Modified),Today()));
+,Set(varNoReset,true));*/
+
+Clear(colEditOppor);Set(varSortColumnu,"Project Name");Set(varSortDirectionu,"Ascending");
+ Navigate(Gallery);Set(varWait,false);
+
+
+
+Gallery :
+Onvisible
+Clear(colEditOppor);
+Set(varAppEmail,false);
+ 
+Gallery col
+If(varHomevisibleOp,  
+
+If(varSortColumnu ="EngagementLevel",Sort(Filter(
+    colTotal,
+    'Project Name' in cmbProjNameFltr.SelectedItems || IsBlank(cmbProjNameFltr.SelectedItems) || IsEmpty(cmbProjNameFltr.SelectedItems),
+   'Client Name' in cmbClientFltr.SelectedItems || IsBlank(cmbClientFltr.SelectedItems) || IsEmpty(cmbClientFltr.SelectedItems),
+   EngagementLevel in cmbFlterEng.SelectedItems || IsBlank(cmbFlterEng.SelectedItems) || IsEmpty(cmbFlterEng.SelectedItems),
+   IsBlank(cmbResourcs.SelectedItems) || IsEmpty(cmbResourcs.SelectedItems) 
+   || CountRows(Filter( Split(Resource,","),Trim(Value) in   cmbResourcs.SelectedItems))>0 
+  // ||    CountRows(If(Filter( Split(Resource,","),Trim(Value)=Blank())    in  cmbResourcs.SelectedItems))>0
+   ,Text('Due Date',"mmmm") in cmbFiltrMonth.SelectedItems || IsBlank(cmbFiltrMonth.SelectedItems) || IsEmpty(cmbFiltrMonth.SelectedItems),
+    Year('Due Date') in cmbFiltrYear.SelectedItems || IsBlank(cmbFiltrYear.SelectedItems) || IsEmpty(cmbFiltrYear.SelectedItems)
+,PriorityNew.Value in cmbFltrPririty.SelectedItems || IsBlank(cmbFltrPririty.SelectedItems) || IsEmpty(cmbFltrPririty.SelectedItems)
+,Progress.Value in cmbFiltrProgress.SelectedItems || IsBlank(cmbFiltrProgress.SelectedItems) || IsEmpty(cmbFiltrProgress.SelectedItems)
+,ModifiedNew>=dtpckStartDteMod.SelectedDate || IsBlank(dtpckStartDteMod.SelectedDate) 
+
+, ModifiedNew<=dtpckrEndDtMod.SelectedDate || IsBlank(dtpckrEndDtMod.SelectedDate) , Status_Project in cmbFiltrSts.SelectedItems || IsBlank(cmbFiltrSts.SelectedItems) || IsEmpty(cmbFiltrSts.SelectedItems)
+)
+
+
+
+
+,EngagementLevel.Value,varSortDirectionu),
+
+If(varSortColumnu = "Progress",Sort(Filter(
+    colTotal,
+    'Project Name' in cmbProjNameFltr.SelectedItems || IsBlank(cmbProjNameFltr.SelectedItems) || IsEmpty(cmbProjNameFltr.SelectedItems),
+   'Client Name' in cmbClientFltr.SelectedItems || IsBlank(cmbClientFltr.SelectedItems) || IsEmpty(cmbClientFltr.SelectedItems),
+   EngagementLevel in cmbFlterEng.SelectedItems || IsBlank(cmbFlterEng.SelectedItems) || IsEmpty(cmbFlterEng.SelectedItems),
+   IsBlank(cmbResourcs.SelectedItems) || IsEmpty(cmbResourcs.SelectedItems) 
+   || CountRows(Filter( Split(Resource,","),Trim(Value) in   cmbResourcs.SelectedItems))>0 
+  // ||    CountRows(If(Filter( Split(Resource,","),Trim(Value)=Blank())    in  cmbResourcs.SelectedItems))>0
+   ,Text('Due Date',"mmmm") in cmbFiltrMonth.SelectedItems || IsBlank(cmbFiltrMonth.SelectedItems) || IsEmpty(cmbFiltrMonth.SelectedItems),
+    Year('Due Date') in cmbFiltrYear.SelectedItems || IsBlank(cmbFiltrYear.SelectedItems) || IsEmpty(cmbFiltrYear.SelectedItems)
+,PriorityNew.Value in cmbFltrPririty.SelectedItems || IsBlank(cmbFltrPririty.SelectedItems) || IsEmpty(cmbFltrPririty.SelectedItems)
+,Progress.Value in cmbFiltrProgress.SelectedItems || IsBlank(cmbFiltrProgress.SelectedItems) || IsEmpty(cmbFiltrProgress.SelectedItems)
+,ModifiedNew>=dtpckStartDteMod.SelectedDate || IsBlank(dtpckStartDteMod.SelectedDate) 
+
+, ModifiedNew<=dtpckrEndDtMod.SelectedDate || IsBlank(dtpckrEndDtMod.SelectedDate) , Status_Project in cmbFiltrSts.SelectedItems || IsBlank(cmbFiltrSts.SelectedItems) || IsEmpty(cmbFiltrSts.SelectedItems)
+), 
+
+
+Progress.Value,varSortDirectionu),
+
+If(!IsBlank(varSortColumnu),
+
+SortByColumns(Filter(
+    colTotal,
+    'Project Name' in cmbProjNameFltr.SelectedItems || IsBlank(cmbProjNameFltr.SelectedItems) || IsEmpty(cmbProjNameFltr.SelectedItems),
+   'Client Name' in cmbClientFltr.SelectedItems || IsBlank(cmbClientFltr.SelectedItems) || IsEmpty(cmbClientFltr.SelectedItems),
+   EngagementLevel in cmbFlterEng.SelectedItems || IsBlank(cmbFlterEng.SelectedItems) || IsEmpty(cmbFlterEng.SelectedItems),
+   IsBlank(cmbResourcs.SelectedItems) || IsEmpty(cmbResourcs.SelectedItems) 
+   || CountRows(Filter( Split(Resource,","),Trim(Value) in   cmbResourcs.SelectedItems))>0 
+  // ||    CountRows(If(Filter( Split(Resource,","),Trim(Value)=Blank())    in  cmbResourcs.SelectedItems))>0
+   ,Text('Due Date',"mmmm") in cmbFiltrMonth.SelectedItems || IsBlank(cmbFiltrMonth.SelectedItems) || IsEmpty(cmbFiltrMonth.SelectedItems),
+    Year('Due Date') in cmbFiltrYear.SelectedItems || IsBlank(cmbFiltrYear.SelectedItems) || IsEmpty(cmbFiltrYear.SelectedItems)
+,PriorityNew.Value in cmbFltrPririty.SelectedItems || IsBlank(cmbFltrPririty.SelectedItems) || IsEmpty(cmbFltrPririty.SelectedItems)
+,Progress.Value in cmbFiltrProgress.SelectedItems || IsBlank(cmbFiltrProgress.SelectedItems) || IsEmpty(cmbFiltrProgress.SelectedItems)
+,ModifiedNew>=dtpckStartDteMod.SelectedDate || IsBlank(dtpckStartDteMod.SelectedDate) 
+
+, ModifiedNew<=dtpckrEndDtMod.SelectedDate || IsBlank(dtpckrEndDtMod.SelectedDate) , Status_Project in cmbFiltrSts.SelectedItems || IsBlank(cmbFiltrSts.SelectedItems) || IsEmpty(cmbFiltrSts.SelectedItems)
+),
+
+varSortColumnu,varSortDirectionu)
+, // for empty sort selection
+SortByColumns(Filter(
+    colTotal,
+    'Project Name' in cmbProjNameFltr.SelectedItems || IsBlank(cmbProjNameFltr.SelectedItems) || IsEmpty(cmbProjNameFltr.SelectedItems),
+   'Client Name' in cmbClientFltr.SelectedItems || IsBlank(cmbClientFltr.SelectedItems) || IsEmpty(cmbClientFltr.SelectedItems),
+   EngagementLevel in cmbFlterEng.SelectedItems || IsBlank(cmbFlterEng.SelectedItems) || IsEmpty(cmbFlterEng.SelectedItems),
+   IsBlank(cmbResourcs.SelectedItems) || IsEmpty(cmbResourcs.SelectedItems) 
+   || CountRows(Filter( Split(Resource,","),Trim(Value) in   cmbResourcs.SelectedItems))>0 
+  // ||    CountRows(If(Filter( Split(Resource,","),Trim(Value)=Blank())    in  cmbResourcs.SelectedItems))>0
+   ,Text('Due Date',"mmmm") in cmbFiltrMonth.SelectedItems || IsBlank(cmbFiltrMonth.SelectedItems) || IsEmpty(cmbFiltrMonth.SelectedItems),
+    Year('Due Date') in cmbFiltrYear.SelectedItems || IsBlank(cmbFiltrYear.SelectedItems) || IsEmpty(cmbFiltrYear.SelectedItems)
+,PriorityNew.Value in cmbFltrPririty.SelectedItems || IsBlank(cmbFltrPririty.SelectedItems) || IsEmpty(cmbFltrPririty.SelectedItems)
+,Progress.Value in cmbFiltrProgress.SelectedItems || IsBlank(cmbFiltrProgress.SelectedItems) || IsEmpty(cmbFiltrProgress.SelectedItems)
+
+,ModifiedNew>=dtpckStartDteMod.SelectedDate
+ || IsBlank(dtpckStartDteMod.SelectedDate) 
+
+, ModifiedNew<=dtpckrEndDtMod.SelectedDate 
+|| IsBlank(dtpckrEndDtMod.SelectedDate) ,
+ Status_Project in cmbFiltrSts.SelectedItems || IsBlank(cmbFiltrSts.SelectedItems) || IsEmpty(cmbFiltrSts.SelectedItems)
+),
+"Project Name",SortOrder.Ascending)
+)
+
+)))
+
+
+
+ 
+Gallery edit button
+Select(Parent);
+Clear(colEditOppor);
+Set(varOpp,false);Set(varInnov,false);Set(varStrtSlider,SliderStart.Value);Set(varEndSlider,SliderEnd.Value);
+Set(varAppEmail,false);Set(varNoReset,true);
+Select(btnCollection_Gal);
+If(ThisItem.'Project Type' ="Opportunity",
+Set(varOpportunityEdit,true);Set(varInnovationEdit,false);Set(varOpportunityNew,false) ;Set(varInnovationNew,false);
+ClearCollect(colEditOppor,LookUp(colOpportunity,ID=ThisItem.ID1));
+//ClearCollect(colEditOppor,ThisItem);
+,
+Set(varInnovationEdit,true);Set(varOpportunityEdit,false);Set(varInnovationNew,false);Set(varOpportunityNew,false) ;
+//ClearCollect(colEditInnovate,LookUp(colInnovation,ID=ThisItem.ID1))
+); 
+
+Navigate(ProjectScreen);
+
+Engagemeny background colours
+   If( ThisItem.EngagementLevel.Value="Declined Engagement",    RGBA(228,41,37,1),//Red
+   If( ThisItem.EngagementLevel.Value="Basic Engagement",RGBA(255,212,0,1),//Yellow
+    If( ThisItem.EngagementLevel.Value="Extended Engagement", RGBA(65,172,76,1),//light green
+     If( ThisItem.EngagementLevel.Value="Complete Engagement",RGBA(65,172,76,0.5),// dark green    
+   Color.White))))
+
+
