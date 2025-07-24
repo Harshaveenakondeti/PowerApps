@@ -1,0 +1,33 @@
+Select(Parent);Set(varGroupAdd,true);
+Set(VarNumber,VarNumber+1);
+// collevt, update, serial number
+Collect(ColAssetDetails,{Assets:
+
+ThisItem.Assets.Value,'Manufacturer Name':ThisItem.'Manufacturer Name','Model Number':ThisItem.'Model Number','Serial Number':ThisItem.'Serial Number',
+'System Name':ThisItem.'System Name','Asset Serial Number':Last(Filter(ColAssetDetails,'Asset Serial Number'=ThisItem.'Asset Serial Number')).'Asset Serial Number'+1});
+ForAll(ColAssetDetails,
+Patch('Asset Form', Defaults('Asset Form'),
+
+{//'Employee ID':txt.Text,
+
+Email:User().Email,
+Name:
+{'@odata type':"#Microsoft.Azure.Connectors,Sharepoint.SPListExpandedUser",
+Claims:"i:0#.f|membership|"& Lower(User().Email),
+Department:"",
+DisplayName:User().DisplayName,
+Email: User().Email,
+JobTitle:"",
+Picture:""
+},
+Division:Office365Users.MyProfile().Department,
+'Office Location':Office365Users.MyProfile().OfficeLocation,
+//'Asset Name':drpAsset.Selected,
+Assets:drpAsset_1.Selected,
+'Manufacturer Name':txtInpManName_1.Text,
+'Model Number':txtInpModelNum_1.Text,
+'System Name':txtInpSysName_1.Text,
+'Serial Number':txtIpSerNum_1.Text})
+);
+
+Patch('Asset Form',colAsset);
