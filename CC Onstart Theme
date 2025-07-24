@@ -1,0 +1,69 @@
+Set(
+    gblPadding,
+    {
+        Page: 20,
+        Button: 12,
+        ButtonText: 24,
+        Container: 32,
+        galleryHeader: 16
+    }
+);
+Set(
+    globalMMStandardStyling,
+    {
+        MMFont: {
+            FontSize: {
+                Header1: 16,
+                Header2: 14,
+                Normal: 12,
+                Medium: 10,
+                Small: 8
+            },
+            FontStyle: {MMArial: Font.Arial},
+            FontWeight: {
+                MMNormal: FontWeight.Normal,
+                MMSemiBold: FontWeight.Semibold,
+                MMBold: FontWeight.Bold,
+                MMLighter: FontWeight.Lighter
+            },
+            FontColor: {
+                LimeGreen: ColorValue("#AFC236"),
+                Green: ColorValue("#41AC4C"),
+                Gold: ColorValue("#F8AC04"),
+                Red: ColorValue("#E42925"),
+                Orange: ColorValue("#E95A1A"),
+                Yellow: ColorValue("#FFD400"),
+                Black: ColorValue("#000000"),
+                White: ColorValue("#ffffff"),
+                DarkGrey: ColorValue("#333333"),
+                LightGrey: ColorValue("#a7a7a7"),
+                Stone: ColorValue("#edebe6"),
+                DarkStone: ColorValue("#c9c2bf"),
+                Blue: ColorValue("#2B86C7"),
+                DarkBlue: ColorValue("#216B99"),
+                Turquoise: ColorValue("#2FB6BC"),
+                DarkTurquoise: ColorValue("#009695"),
+                Pink: ColorValue("#FF278D")
+            }
+        },
+        MMColor: {
+            LimeGreen: ColorValue("#AFC236"),
+            Green: ColorValue("#41AC4C"),
+            Gold: ColorValue("#F8AC04"),
+            Red: ColorValue("#E42925"),
+            Orange: ColorValue("#E95A1A"),
+            Yellow: ColorValue("#FFD400"),
+            Black: ColorValue("#000000"),
+            White: ColorValue("#ffffff"),
+            DarkGrey: ColorValue("#333333"),
+            LightGrey: ColorValue("#a7a7a7"),
+            Stone: ColorValue("#edebe6"),
+            DarkStone: ColorValue("#c9c2bf"),
+            Blue: ColorValue("#2B86C7"),
+            DarkBlue: ColorValue("#216B99"),
+            Turquoise: ColorValue("#2FB6BC"),
+            DarkTurquoise: ColorValue("#009695"),
+            Pink: ColorValue("#FF278D")
+        }
+    }
+);
